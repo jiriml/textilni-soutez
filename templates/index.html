@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Textilní soutěž</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+    }
+
+    body {
+        background: #111;
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 32px;
+
+
+  	}
+    header::after {
+        position: absolute;
+        content: "";
+        z-index: -1;
+        inset: 0;
+        filter: blur(8px);
+        background: rgba(0,0,0,0.15);
+        backdrop-filter: blur(0.5px);
+    }
+
+    .title {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+    }
+
+
+    /* CONTENT */
+    .content {
+        padding: 70px 42px;
+        max-width: 900px;
+    }
+
+    h1 {
+        font-size: 44px;
+        font-weight: 700;
+        color: #f2f2f2;
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+    }
+
+    .desc {
+        font-size: 16px;
+        color: #bdbdbd;
+        line-height: 1.6;
+        max-width: 600px;
+        margin-bottom: 30px;
+    }
+
+    .highlight {
+        color: #3A7AA6;
+        font-weight: 600;
+    }
+
+    ol {
+        margin-left: 18px;
+        margin-bottom: 30px;
+        color: #d7d7d7;
+    }
+
+    li {
+        margin-bottom: 10px;
+    }
+
+    .terms {
+        display: flex;
+        gap: 10px;
+        font-size: 13px;
+        color: #a9a9a9;
+        max-width: 650px;
+        margin-bottom: 20px;
+    }
+
+    input[type="checkbox"] {
+        accent-color: #3A7AA6;
+    }
+
+    button {
+        padding: 14px 30px;
+        border-radius: 0px;
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 15px;
+        font-weight: 600;
+        background: rgba(255,255,255,0.06);
+        color: #888;
+        cursor: not-allowed;
+        transition: all 0.25s ease;
+    }
+
+    button.active {
+        background: #3A7AA6;
+        color: white;
+        cursor: pointer;
+    }
+
+    button.active:hover {
+        transform: translateY(-2px);
+    }
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <img src="{{ url_for('static', filename='images/BIGYlogo.png') }}" style="height: 26px;" />
+    <div class="title">
+        Textilní soutěž <span style="color:#3A7AA6 
+">Biskupského</span> <span  style="color:#FFC000
+">gymnázia</span>
+    </div>
+</header>
+
+<div class="content">
+
+    <h1>Navrhni něco, co se bude nosit</h1>
+
+    <div class="desc">
+        Vítězný návrh se <span class="highlight">dočká REÁLNÉ výroby.</span>
+    </div>
+
+    <ol>
+        <li>Stáhni si a uprav šablonu</li>
+        <li>Nahraj svůj návrh do systému</li>
+        <li>Hlasuj o vítězný design</li>
+    </ol>
+
+    <div class="terms">
+        <input type="checkbox" id="agree">
+        <label for="agree">
+            Souhlasím s 
+            <a style="color: inherit;" href="{{ url_for('termsOfUse') }}" target="_blank">podmínkami používání, zpracováním osobních údajů</a>
+            a technickými cookies.
+        </label>
+    </div>
+
+    <button id="btn">Začni navrhovat ↗</button>
+
+</div>
+
+<script>
+    const checkbox = document.getElementById("agree");
+    const btn = document.getElementById("btn");
+
+    checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+            btn.classList.add("active");
+            btn.onclick = () => window.location.href = "/login";
+        } else {
+            btn.classList.remove("active");
+            btn.onclick = null;
+        }
+    });
+</script>
+
+</body>
+</html>

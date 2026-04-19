@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Textilní soutěž</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+    }
+
+    body {
+        background: #111;
+        color: white;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* HEADER / NAVBAR */
+    header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 28px;
+        background: rgba(0,0,0,0.25);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        z-index: 10;
+    }
+
+    /* LOGO */
+    .nav-logo {
+        display: flex;
+        align-items: center;
+    }
+
+    /* LEVÁ NAVIGAČNÍ ČÁST */
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-left: 20px;
+        flex: 1;
+    }
+
+    /* PRAVÁ STRANA */
+    .nav-right {
+        display: flex;
+        flex-direction: column;   /* KLÍČOVÉ */
+        align-items: flex-end;    /* zarovnání doprava */
+        gap: 2px;                 /* malá mezera mezi email a logout */
+    }
+
+    .nav-link {
+        font-size: 14px;
+        color: #cfcfcf;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+    .nav-link:hover {
+        color: white;
+    }
+
+    .profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .profile div {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .logout {
+        font-size: 13px;
+        color: #fc5353;
+        font-weight: bold;
+        text-decoration: none;
+        transition: 0.2s ease;
+    }
+
+    .logout:hover {
+        color: white;
+    }
+
+    /* BODY (zatím prázdný) */
+    .content {
+        padding: 40px;
+    }
+    @media (max-width: 700px) {
+        .nav-logo {
+            display: none;
+        }
+    }
+
+    /* BLUR OVERLAY */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        backdrop-filter: blur(8px);
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 1;
+        transition: 0.25s ease;
+    }
+
+    .modal-overlay.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* MODAL BOX */
+    .modal {
+        width: 900px;
+        max-width: 90%;
+        background: #181818;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+
+        transform: translateY(20px);
+        transition: 0.25s ease;
+    }
+
+    .modal-overlay:not(.hidden) .modal {
+        transform: translateY(0);
+    }
+
+    /* HEADER */
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 14px;
+    }
+
+    /* CLOSE BUTTON */
+    .close-btn {
+        background: none;
+        border: none;
+        color: #aaa;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    .close-btn:hover {
+        color: white;
+    }
+
+    /* CONTENT */
+    .modal-content {
+        padding: 20px;
+    }
+
+    /* TOAST ERROR */
+    .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+
+        background: #ff4d4d;
+        color: white;
+        padding: 14px 22px;
+        border-radius: 10px;
+
+        font-size: 14px;
+        font-weight: 500;
+
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 200;
+    }
+
+    .toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    /* EDITOR LAYOUT */
+.editor {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* CANVAS WRAPPER */
+.canvas-wrapper {
+    flex: 2;
+    background: #0d0d0d;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* CANVAS */
+canvas {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    background: black;
+    border-radius: 8px;
+}
+
+/* PANEL */
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* INPUTS */
+select, .panel button {
+    padding: 10px;
+    background: #1c1c1c;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.panel button:hover {
+    background: #2a2a2a;
+}
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+    .editor {
+        flex-direction: column;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <!-- LOGO (ÚPLNĚ VLEVO) -->
+    <div class="nav-logo">
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='images/BIGYlogo.png') }}" style="height: 26px;" >
+        </a>
+    </div>
+
+    <!-- LEFT NAV -->
+    <div class="nav-left">
+        <a class="nav-link" href="">Jak na to?</a>
+        <a class="nav-link" href="#" onclick="openModal()">Vytvořit návrh</a>
+        <a class="nav-link" href="">Moje návrhy</a>
+    </div>
+
+  <!-- RIGHT --> <div class="nav-right"> <div class="user-email">{{ user.email }}</div><a class="logout" href="{{ url_for('logout') }}">Odhlásit se [→</a> </div>
+
+</header>
+
+<div class="content">
+    <!-- zatím prázdné -->
+</div>
+
+<!-- MODAL -->
+<div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+            <div class="modal-header">
+                <div>Vytvořit návrh</div>
+                <button class="close-btn" onclick="closeModal()">✕</button>
+            </div>
+
+            <div class="editor">
+
+                <!-- CANVAS -->
+                <div class="canvas-wrapper">
+                    <canvas id="designCanvas" onclick="this.toBlob(b=>window.open(window.URL.createObjectURL(b),'_blank'),'image/png')"></canvas>
+                </div>
+
+                <!-- SIDE PANEL -->
+                <div class="panel">
+                    
+                    <label>Barva podkladu</label>
+                    <select id="colorSelect">
+                        <option value="#eeeeee">Bílá</option>
+                        <option value="#3a7aa6">Modrá</option>
+                        <option value="#181818">Černá</option>
+                        
+                        
+                    </select>
+
+                    <button onclick="downloadTemplate()">Stáhnout šablonu</button>
+                    <button onclick="uploadTemplate('front')">Nahrát přední šablonu</button>
+                    <button onclick="uploadTemplate('back')">Nahrát zadní šablonu</button>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- ERROR TOAST -->
+<div id="errorToast" class="toast hidden"></div>
+
+
+
+
+<script defer>
+    const modal = document.getElementById("modalOverlay");
+    const toast = document.getElementById("errorToast");
+
+    const TshirtDimensions = [5258, 5569]
+    const zoneDimensions = [2687, 4513]
+    const zoneOffset = [1285, 800]
+
+    let frontImage = null;
+    let backImage = null;
+
+    const designCanvas = document.getElementById("designCanvas");
+    const ctx = designCanvas.getContext("2d");
+
+    designCanvas.width = TshirtDimensions[0] * 2; // dvě trička vedle sebe
+    designCanvas.height = TshirtDimensions[1];
+
+    // OPEN MODAL
+    function openModal() {
+        modal.classList.remove("hidden");
+        redrawCanvas();
+    }
+
+    // CLOSE MODAL
+    function closeModal() {
+        modal.classList.add("hidden");
+    }
+
+    // ERROR TOAST
+    function showError(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+    async function downloadTemplate() {
+        const color = document.getElementById("colorSelect").value;
+
+        // vytvoření offscreen canvasu (plná velikost)
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const width = TshirtDimensions[0];
+        const height = TshirtDimensions[1];
+
+        canvas.toDataURL("image/png")
+        canvas.width = width;
+        canvas.height = height;
+
+        // load images
+        const baseImg = await loadImage("{{ url_for('static', filename='images/templateshirt.png') }}");
+        const zoneImg = await loadImage("{{ url_for('static', filename='images/zone.png') }}");
+
+        // 1️⃣ Nakreslete tričko (base)
+        ctx.drawImage(baseImg, 0, 0, width, height);
+
+        // 2️⃣ Obarvení pouze tam, kde je tričko
+        ctx.globalCompositeOperation = "source-in"; // "Kresli jen tam, kde už něco je"
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, width, height);
+
+        // 3️⃣ Nyní aplikujte Multiply, aby se barva prolnula se stíny trička
+        ctx.globalCompositeOperation = "multiply";
+        ctx.drawImage(baseImg, 0, 0, width, height); 
+
+        // Reset pro další vrstvy
+        ctx.globalCompositeOperation = "source-over";
+
+        // 4️⃣ Overlay zone (zbytek vašeho kódu...)
+        ctx.drawImage(zoneImg, zoneOffset[0], zoneOffset[1], zoneDimensions[0], zoneDimensions[1]);
+
+        // 4️⃣ download
+        const link = document.createElement("a");
+        link.download = "BIGY-template.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+
+    // helper
+    function loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+        });
+    }
+
+    async function redrawCanvas() {
+        const color = document.getElementById("colorSelect").value;
+
+        const baseImg = await loadImage("{{ url_for('static', filename='images/canvasTshirt.png') }}");
+
+        // === HLAVNÍ CANVAS ===
+        ctx.clearRect(0, 0, designCanvas.width, designCanvas.height);
+
+        // === TEMPLATE CANVAS (data layer) ===
+        const template = document.createElement("canvas");
+        template.width = designCanvas.width;
+        template.height = designCanvas.height;
+
+        const tctx = template.getContext("2d");
+
+        // 1️⃣ barva (pozadí)
+        tctx.fillStyle = color;
+        tctx.fillRect(0, 0, template.width, template.height);
+
+        // 2️⃣ FRONT image
+        if (frontImage) {
+            tctx.drawImage(
+                frontImage,
+                zoneOffset[0] + 10,
+                zoneOffset[1] + 10,
+                zoneDimensions[0] - 20,
+                zoneDimensions[1] - 20
+            );
+        }
+
+        // 3️⃣ BACK image (posun o šířku trika)
+        if (backImage) {
+            tctx.drawImage(
+                backImage,
+                TshirtDimensions[0] + zoneOffset[0] + 10,
+                zoneOffset[1] + 10,
+                zoneDimensions[0] - 20,
+                zoneDimensions[1] - 20
+            );
+        }
+
+        // === RENDER LAYER ===
+
+        // 4️⃣ nakresli obě trička (maska + shading základ)
+        ctx.drawImage(baseImg, 0, 0);
+        ctx.drawImage(baseImg, TshirtDimensions[0], 0);
+
+        // 5️⃣ aplikuj template jen tam kde je tričko
+        ctx.globalCompositeOperation = "source-in";
+        ctx.drawImage(template, 0, 0);
+
+        // 6️⃣ shading (detaily trička)
+        ctx.globalCompositeOperation = "multiply";
+        ctx.drawImage(baseImg, 0, 0);
+        ctx.drawImage(baseImg, TshirtDimensions[0], 0);
+
+        // reset
+        ctx.globalCompositeOperation = "source-over";
+    }
+
+    function uploadTemplate(type) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/png";
+
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const img = await loadImage(URL.createObjectURL(file));
+
+            // ❌ kontrola rozměrů
+            if (img.width !== TshirtDimensions[0] || img.height !== TshirtDimensions[1]) {
+                showError("Rozměry šablony neodpovídají");
+                return;
+            }
+
+            // ✂️ vytvoření canvasu pro výřez zóny
+            const cut = document.createElement("canvas");
+            cut.width = zoneDimensions[0] - 20;
+            cut.height = zoneDimensions[1] - 20;
+
+            const cctx = cut.getContext("2d");
+
+            // ✂️ vyříznutí zóny (offset + padding)
+            cctx.drawImage(
+                img,
+                zoneOffset[0] + 10,
+                zoneOffset[1] + 10,
+                zoneDimensions[0] - 20,
+                zoneDimensions[1] - 20,
+                0,
+                0,
+                cut.width,
+                cut.height
+            );
+
+            // 💾 uložit jen výřez
+            if (type === "front") {
+                frontImage = cut;
+            } else {
+                backImage = cut;
+            }
+
+            redrawCanvas();
+        };
+
+        input.click();
+    }
+
+
+    
+
+    document.getElementById("colorSelect")
+    .addEventListener("change", redrawCanvas);
+
+</script>
+
+</body>
+</html>

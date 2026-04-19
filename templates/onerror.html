@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Chyba</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+    }
+
+    body {
+        background: #111;
+        color: #e6e6e6;
+        line-height: 1.6;
+    }
+
+    header {
+        position: sticky;
+        top: 0;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 32px;
+    }
+
+    header::after {
+        position: absolute;
+        content: "";
+        z-index: -1;
+        inset: 0;
+        filter: blur(8px);
+        background: rgba(0,0,0,0.15);
+        backdrop-filter: blur(0.5px);
+    }
+
+    .title {
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 80px 32px;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 34px;
+        margin-bottom: 20px;
+        color: #ffffff;
+    }
+
+    p {
+        color: #cfcfcf;
+        font-size: 15px;
+        margin-bottom: 20px;
+    }
+
+    .back {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 14px;
+        color: #cfcfcf;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .back:hover {
+        color: white;
+    }
+
+    .logo {
+        height: 26px;
+    }
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <img src="{{ url_for('static', filename='images/BIGYlogo.png') }}" class="logo" />
+    <div class="title">Chyba :-(</div>
+</header>
+
+<div class="container">
+
+    <h1>Něco se nepovedlo</h1>
+
+    <p>{{ errormessage or "Došlo k neočekávané chybě." }}</p>
+
+    <a href="{{ url_for('index') }}" class="back">← Zpět na hlavní stránku</a>
+
+</div>
+
+</body>
+</html>
