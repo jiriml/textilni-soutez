@@ -58,17 +58,16 @@ def login():
 def callback():
     # 1) error check
     if request.args.get("error"):
-        return f"OAuth error: {request.args.get('error')}", 400
+        return render_template("onerror.html", errormessage=f"OAuth error: {request.args.get('error')}")
 
     # 2) state check (important!)
     state = request.args.get("state")
     expected_state = session.get("oauth_state")
 
     if not state:
-        return (
-            "Chyba přihlášení: chybí bezpečnostní parametr (state).\n"
-            "Možná máte blokované cookies nebo soukromý režim prohlížeče."
-        ), 400
+        return render_template("onerror.html", errormessage="Chyba přihlášení: chybí bezpečnostní parametr (state).\n"
+            "Možná máte blokované cookies nebo soukromý režim prohlížeče.")
+
 
     if state != expected_state:
         return render_template("onerror.html", errormessage= "Systém detekoval kryptografickou nesrovnalost mezi začátkem a koncem přihlašování.\n"
