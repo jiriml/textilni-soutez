@@ -24,6 +24,9 @@ USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 @app.route("/")
 def index():
     return render_template("index.html")
+@app.route("/ping")
+def ping():
+    return "pong"
 @app.route("/terms-of-use")
 def termsOfUse():
     return render_template("terms-of-use/index.html")
