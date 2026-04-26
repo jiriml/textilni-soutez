@@ -5,7 +5,7 @@ from flask import Flask, request, redirect, session, render_template
 import requests
 import os
 import secrets
-
+print("PORT FROM ENV:", os.environ.get("PORT","FAILED"))
 
 
 app = Flask(__name__)
