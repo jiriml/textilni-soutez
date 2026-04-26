@@ -132,4 +132,4 @@ def workspace():
 
 
 if __name__ == "__main__": # DO NOT USE IN PRODUCTION
-    app.run(port=1234)
+    app.run(port=1234, host="0.0.0.0")
