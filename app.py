@@ -135,4 +135,4 @@ def workspace():
 
 
 if __name__ == "__main__": # DO NOT USE IN PRODUCTION
-    app.run(port=1234, host="0.0.0.0")
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
