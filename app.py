@@ -14,7 +14,7 @@ app.secret_key = os.environ.get("FLASK_SECRET", "")
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 
-REDIRECT_URI = "http://localhost:1234/callback"
+REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://localhost:1234/callback") 
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -131,5 +131,5 @@ def workspace():
     """
 
 
-if __name__ == "__main__":
-    app.run(port=1234, debug=True)
+if __name__ == "__main__": # DO NOT USE IN PRODUCTION
+    app.run(port=1234)
