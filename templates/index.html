@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Textilní soutěž</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -110,17 +111,36 @@
         background: rgba(255,255,255,0.06);
         color: #888;
         cursor: not-allowed;
-        transition: all 0.25s ease;
+        transition: all 0.4s ease-in-out;
     }
 
     button.active {
         background: #3A7AA6;
+        border: 1px solid #306c94;
         color: white;
         cursor: pointer;
+        overflow: hidden;
+        position: relative;
+        box-sizing: border-box;
     }
-
+    button.active::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 160%;
+      height: 100%;
+      background: #FFC000;
+      transform: translateX(-160%) skewX(-20deg);
+      transition: transform 0.4s ease-in-out;
+      z-index: -1;
+    }
+    button.active:hover::before {
+        transform: translateX(-40%) skewX(-20deg);
+    }
     button.active:hover {
-        transform: translateY(-2px);
+        color: #111;
+        border: 1px solid #d8a303;
+        transform: scale(1.005);
     }
 
 </style>
@@ -155,7 +175,7 @@
         <input type="checkbox" id="agree">
         <label for="agree">
             Souhlasím s 
-            <a style="color: inherit;" href="{{ url_for('termsOfUse') }}" target="_blank">podmínkami používání, zpracováním osobních údajů</a>
+            <a style="color: inherit;" href="{{ url_for('termsOfUse') }}">podmínkami používání, zpracováním osobních údajů</a>
             a technickými cookies.
         </label>
     </div>

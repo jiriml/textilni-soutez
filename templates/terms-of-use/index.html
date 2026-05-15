@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Podmínky používání</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -94,7 +95,7 @@
 <body>
 
 <header>
-    <img src="{{ url_for('static', filename='images/BIGYlogo.png') }}" class="logo" />
+    <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='images/BIGYlogo.png') }}" class="logo" /></a>
     <div class="title">Podmínky používání</div>
 </header>
 

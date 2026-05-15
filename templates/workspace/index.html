@@ -2,254 +2,11 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Textilní soutěž</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Inter", sans-serif;
-    }
-
-    body {
-        background: #111;
-        color: white;
-        min-height: 100vh;
-        overflow-x: hidden;
-    }
-
-    /* HEADER / NAVBAR */
-    header {
-        position: sticky;
-        top: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 28px;
-        background: rgba(0,0,0,0.25);
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        z-index: 10;
-    }
-
-    /* LOGO */
-    .nav-logo {
-        display: flex;
-        align-items: center;
-    }
-
-    /* LEVÁ NAVIGAČNÍ ČÁST */
-    .nav-left {
-        display: flex;
-        align-items: center;
-        gap: 18px;
-        margin-left: 20px;
-        flex: 1;
-    }
-
-    /* PRAVÁ STRANA */
-    .nav-right {
-        display: flex;
-        flex-direction: column;   /* KLÍČOVÉ */
-        align-items: flex-end;    /* zarovnání doprava */
-        gap: 2px;                 /* malá mezera mezi email a logout */
-    }
-
-    .nav-link {
-        font-size: 14px;
-        color: #cfcfcf;
-        text-decoration: none;
-        transition: 0.2s ease;
-    }
-
-    .nav-link:hover {
-        color: white;
-    }
-
-    .profile {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        cursor: pointer;
-    }
-
-    .profile div {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-size: cover;
-        background-position: center;
-        object-fit: cover;
-        border: 1px solid rgba(255,255,255,0.15);
-    }
-
-    .logout {
-        font-size: 13px;
-        color: #fc5353;
-        font-weight: bold;
-        text-decoration: none;
-        transition: 0.2s ease;
-    }
-
-    .logout:hover {
-        color: white;
-    }
-
-    /* BODY (zatím prázdný) */
-    .content {
-        padding: 40px;
-    }
-    @media (max-width: 700px) {
-        .nav-logo {
-            display: none;
-        }
-    }
-
-    /* BLUR OVERLAY */
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        backdrop-filter: blur(8px);
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-        opacity: 1;
-        transition: 0.25s ease;
-    }
-
-    .modal-overlay.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* MODAL BOX */
-    .modal {
-        width: 900px;
-        max-width: 90%;
-        background: #181818;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-
-        transform: translateY(20px);
-        transition: 0.25s ease;
-    }
-
-    .modal-overlay:not(.hidden) .modal {
-        transform: translateY(0);
-    }
-
-    /* HEADER */
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        padding: 14px;
-    }
-
-    /* CLOSE BUTTON */
-    .close-btn {
-        background: none;
-        border: none;
-        color: #aaa;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-    .close-btn:hover {
-        color: white;
-    }
-
-    /* CONTENT */
-    .modal-content {
-        padding: 20px;
-    }
-
-    /* TOAST ERROR */
-    .toast {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-
-        background: #ff4d4d;
-        color: white;
-        padding: 14px 22px;
-        border-radius: 10px;
-
-        font-size: 14px;
-        font-weight: 500;
-
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-
-        opacity: 0;
-        transition: all 0.3s ease;
-        z-index: 200;
-    }
-
-    .toast.show {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-    /* EDITOR LAYOUT */
-.editor {
-    display: flex;
-    gap: 20px;
-    padding: 20px;
-}
-
-/* CANVAS WRAPPER */
-.canvas-wrapper {
-    flex: 2;
-    background: #0d0d0d;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* CANVAS */
-canvas {
-    width: 100%;
-    aspect-ratio: 2 / 1;
-    background: black;
-    border-radius: 8px;
-}
-
-/* PANEL */
-.panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-/* INPUTS */
-select, .panel button {
-    padding: 10px;
-    background: #1c1c1c;
-    border: 1px solid rgba(255,255,255,0.08);
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.panel button:hover {
-    background: #2a2a2a;
-}
-
-/* RESPONSIVE */
-@media (max-width: 700px) {
-    .editor {
-        flex-direction: column;
-    }
-}
-
-</style>
+<link href="{{ url_for('static',filename='styles/workspace/style.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -265,17 +22,34 @@ select, .panel button {
 
     <!-- LEFT NAV -->
     <div class="nav-left">
-        <a class="nav-link" href="">Jak na to?</a>
-        <a class="nav-link" href="#" onclick="openModal()">Vytvořit návrh</a>
-        <a class="nav-link" href="">Moje návrhy</a>
+        <a class="nav-link" href="#" onclick="switchSite('W-Welcome')">Úvod</a>
+        <a class="nav-link" href="#" onclick="switchSite('W-Welcome')">Návrhy</a>
+        <a class="nav-link" href="#" onclick="switchSite('W-MyDesigns')">Moje návrhy</a>
     </div>
 
   <!-- RIGHT --> <div class="nav-right"> <div class="user-email">{{ user.email }}</div><a class="logout" href="{{ url_for('logout') }}">Odhlásit se [→</a> </div>
 
 </header>
 
-<div class="content">
-    <!-- zatím prázdné -->
+<div> <!-- All the windows will be here-->
+    <div id="W-Welcome" >
+
+    </div>
+    <div id="W-Designs" style="display: none;">
+        <button class="funbutton" style="margin-left:8px" onclick="loadMyDesigns()">↻</button>
+        <div>
+            <div> </div>
+            <div>
+
+            </div>
+        </div>
+    </div>
+    <div id="W-MyDesigns" style="display: none;">
+        <div id="myDesignsGrid" class="design-grid">
+
+        </div>
+        <button class="funbutton" style="margin-left:8px" onclick="openModal()">Vytvořit návrh</button><button class="funbutton" style="margin-left:8px" onclick="loadMyDesigns()">↻</button>
+    </div>
 </div>
 
 <!-- MODAL -->
@@ -290,7 +64,11 @@ select, .panel button {
 
                 <!-- CANVAS -->
                 <div class="canvas-wrapper">
-                    <canvas id="designCanvas" onclick="this.toBlob(b=>window.open(window.URL.createObjectURL(b),'_blank'),'image/png')"></canvas>
+                    <zoom-stage>
+                        <div class="zoom-content">
+                            <canvas id="designCanvas"></canvas>
+                        </div>
+                    </zoom-stage>
                 </div>
 
                 <!-- SIDE PANEL -->
@@ -308,6 +86,8 @@ select, .panel button {
                     <button onclick="downloadTemplate()">Stáhnout šablonu</button>
                     <button onclick="uploadTemplate('front')">Nahrát přední šablonu</button>
                     <button onclick="uploadTemplate('back')">Nahrát zadní šablonu</button>
+                    <p style="font-size: 75%;"><input type="checkbox" id="UploadTerms"> Nahráním souhlasím s poskytnutím komerčńi licence provozovateli aplikace</p><br>
+                    <button onclick="uploadDesign()">Dokončit</button>
                 </div>
             </div>
     </div>
@@ -316,29 +96,26 @@ select, .panel button {
 <!-- ERROR TOAST -->
 <div id="errorToast" class="toast hidden"></div>
 
+<!-- Config.js -->
+<script defer>
+    const USER = {{ user | tojson }}
+    const TshirtDimensions = [5258, 5569]
+    const zoneDimensions = [2687, 4513]
+    const zoneOffset = [1285, 800]
+</script>
 
-
-
+<!-- Basic functions-->
 <script defer>
     const modal = document.getElementById("modalOverlay");
     const toast = document.getElementById("errorToast");
 
-    const TshirtDimensions = [5258, 5569]
-    const zoneDimensions = [2687, 4513]
-    const zoneOffset = [1285, 800]
-
-    let frontImage = null;
-    let backImage = null;
-
-    const designCanvas = document.getElementById("designCanvas");
-    const ctx = designCanvas.getContext("2d");
-
-    designCanvas.width = TshirtDimensions[0] * 2; // dvě trička vedle sebe
-    designCanvas.height = TshirtDimensions[1];
-
-    // OPEN MODAL
+        // OPEN MODAL
     function openModal() {
+        document.getElementById("colorSelect").value = "#eeeeee"
         modal.classList.remove("hidden");
+        let frontImage = getClearCut();
+        let backImage = getClearCut();
+        document.getElementById("UploadTerms").checked = false;
         redrawCanvas();
     }
 
@@ -356,50 +133,6 @@ select, .panel button {
             toast.classList.remove("show");
         }, 3000);
     }
-    async function downloadTemplate() {
-        const color = document.getElementById("colorSelect").value;
-
-        // vytvoření offscreen canvasu (plná velikost)
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        const width = TshirtDimensions[0];
-        const height = TshirtDimensions[1];
-
-        canvas.toDataURL("image/png")
-        canvas.width = width;
-        canvas.height = height;
-
-        // load images
-        const baseImg = await loadImage("{{ url_for('static', filename='images/templateshirt.png') }}");
-        const zoneImg = await loadImage("{{ url_for('static', filename='images/zone.png') }}");
-
-        // 1️⃣ Nakreslete tričko (base)
-        ctx.drawImage(baseImg, 0, 0, width, height);
-
-        // 2️⃣ Obarvení pouze tam, kde je tričko
-        ctx.globalCompositeOperation = "source-in"; // "Kresli jen tam, kde už něco je"
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, width, height);
-
-        // 3️⃣ Nyní aplikujte Multiply, aby se barva prolnula se stíny trička
-        ctx.globalCompositeOperation = "multiply";
-        ctx.drawImage(baseImg, 0, 0, width, height); 
-
-        // Reset pro další vrstvy
-        ctx.globalCompositeOperation = "source-over";
-
-        // 4️⃣ Overlay zone (zbytek vašeho kódu...)
-        ctx.drawImage(zoneImg, zoneOffset[0], zoneOffset[1], zoneDimensions[0], zoneDimensions[1]);
-
-        // 4️⃣ download
-        const link = document.createElement("a");
-        link.download = "BIGY-template.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    }
-
-    // helper
     function loadImage(src) {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -408,19 +141,34 @@ select, .panel button {
             img.onerror = reject;
         });
     }
+</script>
 
-    async function redrawCanvas() {
-        const color = document.getElementById("colorSelect").value;
+<!-- Advanced Functions-->
+
+<script defer>
+    function getClearCut() {
+        let cut = document.createElement("canvas");cut.width = zoneDimensions[0] - 20;cut.height = zoneDimensions[1] - 20;
+        const ctx = cut.getContext("2d");
+        ctx.clearRect(0,0,zoneDimensions[0] - 20,zoneDimensions[1] - 20);
+        return cut;
+    }
+
+    async function drawCanvas(color, front, back) {
+        const drawCanvas = document.createElement("canvas");
+        drawCanvas.width = TshirtDimensions[0] * 2; // dvě trička vedle sebe
+        drawCanvas.height = TshirtDimensions[1];
+        const ctx = drawCanvas.getContext("2d");
+
 
         const baseImg = await loadImage("{{ url_for('static', filename='images/canvasTshirt.png') }}");
 
         // === HLAVNÍ CANVAS ===
-        ctx.clearRect(0, 0, designCanvas.width, designCanvas.height);
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
         // === TEMPLATE CANVAS (data layer) ===
         const template = document.createElement("canvas");
-        template.width = designCanvas.width;
-        template.height = designCanvas.height;
+        template.width = drawCanvas.width;
+        template.height = drawCanvas.height;
 
         const tctx = template.getContext("2d");
 
@@ -429,9 +177,9 @@ select, .panel button {
         tctx.fillRect(0, 0, template.width, template.height);
 
         // 2️⃣ FRONT image
-        if (frontImage) {
+        if (front) {
             tctx.drawImage(
-                frontImage,
+                front,
                 zoneOffset[0] + 10,
                 zoneOffset[1] + 10,
                 zoneDimensions[0] - 20,
@@ -440,9 +188,9 @@ select, .panel button {
         }
 
         // 3️⃣ BACK image (posun o šířku trika)
-        if (backImage) {
+        if (back) {
             tctx.drawImage(
-                backImage,
+                back,
                 TshirtDimensions[0] + zoneOffset[0] + 10,
                 zoneOffset[1] + 10,
                 zoneDimensions[0] - 20,
@@ -467,6 +215,49 @@ select, .panel button {
 
         // reset
         ctx.globalCompositeOperation = "source-over";
+        return drawCanvas;
+    }
+</script>
+
+<!-- Designer -->
+
+<script defer>
+
+    let frontImage = getClearCut();
+    let backImage = getClearCut();
+
+
+    async function downloadTemplate() {
+        const color = document.getElementById("colorSelect").value;
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const width = TshirtDimensions[0];
+        const height = TshirtDimensions[1];
+        canvas.toDataURL("image/png")
+        canvas.width = width;
+        canvas.height = height;
+        const baseImg = await loadImage("{{ url_for('static', filename='images/templateshirt.png') }}");
+        const zoneImg = await loadImage("{{ url_for('static', filename='images/zone.png') }}");
+        ctx.drawImage(baseImg, 0, 0, width, height);
+        ctx.globalCompositeOperation = "source-in";
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalCompositeOperation = "multiply";
+        ctx.drawImage(baseImg, 0, 0, width, height); 
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(zoneImg, zoneOffset[0], zoneOffset[1], zoneDimensions[0], zoneDimensions[1]);
+        const link = document.createElement("a");
+        link.download = "BIGY-template.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+
+
+
+    async function redrawCanvas() {
+        let newCanvas = await drawCanvas(document.getElementById("colorSelect").value,frontImage,backImage);
+        designCanvas.replaceWith(newCanvas);
+        designCanvas = newCanvas;
     }
 
     function uploadTemplate(type) {
@@ -480,20 +271,17 @@ select, .panel button {
 
             const img = await loadImage(URL.createObjectURL(file));
 
-            // ❌ kontrola rozměrů
             if (img.width !== TshirtDimensions[0] || img.height !== TshirtDimensions[1]) {
                 showError("Rozměry šablony neodpovídají");
                 return;
             }
 
-            // ✂️ vytvoření canvasu pro výřez zóny
             const cut = document.createElement("canvas");
             cut.width = zoneDimensions[0] - 20;
             cut.height = zoneDimensions[1] - 20;
 
             const cctx = cut.getContext("2d");
 
-            // ✂️ vyříznutí zóny (offset + padding)
             cctx.drawImage(
                 img,
                 zoneOffset[0] + 10,
@@ -506,7 +294,6 @@ select, .panel button {
                 cut.height
             );
 
-            // 💾 uložit jen výřez
             if (type === "front") {
                 frontImage = cut;
             } else {
@@ -519,6 +306,53 @@ select, .panel button {
         input.click();
     }
 
+    async function uploadDesign() {
+        async function canvasToBlob(canvas) {
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => {
+            resolve(blob);
+            }, "image/png");
+        });
+        }
+        if (!document.getElementById("UploadTerms").checked) {
+            showError("Musíš souhlasit s podmínkami nahrání!")
+            return
+        }
+        try {
+
+            const formData = new FormData()
+
+            formData.append("front", await canvasToBlob(frontImage), "front.png")
+            formData.append("back", await canvasToBlob(backImage), "back.png")
+            formData.append("color", document.getElementById("colorSelect").value)
+            console.log([...formData.entries()])
+            const response = await fetch("{{ url_for('design_upload') }}", {
+                method: "POST",
+                body: formData
+            })
+
+            console.log(response)
+            const data = await response.text()
+
+            if (data == "SUCCES") {
+                closeModal()
+                return
+            }
+
+            if (data === "LIMIT") {
+                showError("Byl překonán limit povolených návrhů na uživatele")
+                return
+            }
+
+            showError(`Chyba: ${data.error}`)
+
+        } catch (err) {
+
+            console.error(err)
+            showError("Chyba: Nepodařilo se kontaktovat server")
+
+        }
+    }
 
     
 
@@ -527,5 +361,198 @@ select, .panel button {
 
 </script>
 
+
+<!-- Zoomable -->
+<script>
+    class ZoomStage extends HTMLElement {
+    constructor() {
+        super();
+
+        this.zoom = 1;
+        this.active = false;
+
+        this.mouseX = 0;
+        this.mouseY = 0;
+    }
+
+    connectedCallback() {
+        this.content = this.querySelector(".zoom-content");
+
+        this.addEventListener("mousemove", (e) => this.onMove(e));
+
+        this.addEventListener("mousedown", (e) => {
+            if (e.button === 0) {
+                this.active = true;
+                this.zoom = 3;
+                this.render();
+            }
+        });
+
+        window.addEventListener("mouseup", () => {
+            this.active = false;
+            this.zoom = 1;
+            this.render();
+        });
+    }
+
+    onMove(e) {
+        const rect = this.getBoundingClientRect();
+
+        this.mouseX = e.clientX - rect.left;
+        this.mouseY = e.clientY - rect.top;
+
+        this.render();
+    }
+
+    render() {
+        const rect = this.getBoundingClientRect();
+
+        if (this.zoom === 1) {
+            this.content.style.transform = `scale(1) translate(0px, 0px)`;
+            return;
+        }
+
+        const scale = this.zoom;
+
+        const x = this.mouseX / rect.width;
+        const y = this.mouseY / rect.height;
+
+        const offsetX = -(x * rect.width * (scale - 1));
+        const offsetY = -(y * rect.height * (scale - 1));
+
+        this.content.style.transform =
+            `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+}
+
+customElements.define("zoom-stage", ZoomStage);
+</script>
+
+ <!-- Handler of internal windows -->
+<script>
+
+async function loadMyDesigns() {
+
+    const grid = document.getElementById("myDesignsGrid")
+
+    grid.innerHTML = "<div class=\"design-title\">Probíhá načítání...</div>";
+    try {
+        const response = await fetch(
+            "{{ url_for('my_designs') }}",
+            {
+                cache: "no-cache"
+            }
+        )
+
+        const data = await response.json()
+
+        if (data.design_ids.length == 0) {
+            grid.innerHTML = "<div class=\"design-title\">Ještě tady nic není :(</div>";
+        } else {grid.innerHTML=""}
+
+        for (const designID of data.design_ids) {
+
+            let designData
+
+
+            const detailResponse = await fetch(
+                `/api/design/${designID}`,
+                {
+                    cache: "no-cache"
+                }
+            )
+
+            designData = await detailResponse.json()
+
+
+
+
+            const card = document.createElement("div")
+            card.className = "design-card"
+
+            // HEADER
+            const header = document.createElement("div")
+            header.className = "design-header"
+
+            const title = document.createElement("div")
+            title.className = "design-title"
+            title.textContent = `#${designID}`
+
+            const deleteButton = document.createElement("button")
+            deleteButton.className = "design-delete"
+            deleteButton.textContent = "Smazat"
+
+            deleteButton.onclick = async () => {
+
+                if (!confirm("Opravdu smazat návrh?"))
+                    return
+
+                const res = await fetch(
+                    `/api/design/${designID}`,
+                    {
+                        method: "DELETE"
+                    }
+                )
+
+                const text = await res.text()
+
+                if (text === "SUCCESS") {
+                    card.remove()
+                } else {
+                    alert(`Chyba: ${text}`)
+                }
+
+            }
+
+            header.appendChild(title)
+            header.appendChild(deleteButton)
+
+            // ZOOM STAGE
+            const zoomStage = document.createElement("zoom-stage")
+
+            const zoomContent = document.createElement("div")
+            zoomContent.className = "zoom-content"
+
+            // DRAW
+            const [frontImage, backImage] = await Promise.all([
+                loadImage(designData.front),
+                loadImage(designData.back)
+            ])
+
+            const canvas = await drawCanvas(
+                designData.color,
+                frontImage,
+                backImage
+            )
+
+            zoomContent.appendChild(canvas)
+            zoomStage.appendChild(zoomContent)
+
+            card.appendChild(header)
+            card.appendChild(zoomStage)
+
+            grid.appendChild(card)
+
+        }
+    }
+    catch(e) {
+        console.warn(e);
+        grid.innerHTML = "<div class=\"design-title\">Při načítáni nastala chyba :(</div>";
+    }
+
+}
+
+let lastSite = "W-Welcome"
+function switchSite(name) {
+    if (name==lastSite) {return}
+    document.getElementById(lastSite).style.display="none";
+    document.getElementById(name).style.display="block";
+    lastSite=name
+    if (name=="W-MyDesigns") {
+        loadMyDesigns()
+    }
+}
+
+</script>
 </body>
 </html>
