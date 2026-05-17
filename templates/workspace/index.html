@@ -23,7 +23,7 @@
     <!-- LEFT NAV -->
     <div class="nav-left">
         <a class="nav-link" href="#" onclick="switchSite('W-Welcome')">Úvod</a>
-        <a class="nav-link" href="#" onclick="switchSite('W-Welcome')">Návrhy</a>
+        <a class="nav-link" href="#" onclick="switchSite('W-Designs')">Návrhy</a>
         <a class="nav-link" href="#" onclick="switchSite('W-MyDesigns')">Moje návrhy</a>
     </div>
 
@@ -36,11 +36,17 @@
 
     </div>
     <div id="W-Designs" style="display: none;">
-        <button class="funbutton" style="margin-left:8px" onclick="loadMyDesigns()">↻</button>
+        <button class="funbutton" style="margin:8px" onclick="loadDesigns()">↻</button>
         <div>
-            <div> </div>
-            <div>
+            <div id="DesignsGrid" class="design-grid">
 
+            </div>
+            <div class="pager">
+                <button id="prevBtn" class="pager-btn" onclick="DesignPage-=1;loadDesigns()">◀</button>
+
+                <div id="pageText" class="pager-text">Stránka 1</div>
+
+                <button id="nextBtn" class="pager-btn" onclick="DesignPage+=1;loadDesigns()">▶</button>
             </div>
         </div>
     </div>
@@ -77,7 +83,6 @@
                     <label>Barva podkladu</label>
                     <select id="colorSelect">
                         <option value="#eeeeee">Bílá</option>
-                        <option value="#3a7aa6">Modrá</option>
                         <option value="#181818">Černá</option>
                         
                         
@@ -113,8 +118,8 @@
     function openModal() {
         document.getElementById("colorSelect").value = "#eeeeee"
         modal.classList.remove("hidden");
-        let frontImage = getClearCut();
-        let backImage = getClearCut();
+        frontImage = getClearCut();
+        backImage = getClearCut();
         document.getElementById("UploadTerms").checked = false;
         redrawCanvas();
     }
@@ -336,6 +341,7 @@
 
             if (data == "SUCCES") {
                 closeModal()
+                loadMyDesigns()
                 return
             }
 
@@ -435,7 +441,7 @@ async function loadMyDesigns() {
 
     const grid = document.getElementById("myDesignsGrid")
 
-    grid.innerHTML = "<div class=\"design-title\">Probíhá načítání...</div>";
+    grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Probíhá načítání...</div>";
     try {
         const response = await fetch(
             "{{ url_for('my_designs') }}",
@@ -446,25 +452,11 @@ async function loadMyDesigns() {
 
         const data = await response.json()
 
-        if (data.design_ids.length == 0) {
-            grid.innerHTML = "<div class=\"design-title\">Ještě tady nic není :(</div>";
+        if (data.designs.length == 0) {
+            grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Ještě tady nic není :(</div>";
         } else {grid.innerHTML=""}
 
-        for (const designID of data.design_ids) {
-
-            let designData
-
-
-            const detailResponse = await fetch(
-                `/api/design/${designID}`,
-                {
-                    cache: "no-cache"
-                }
-            )
-
-            designData = await detailResponse.json()
-
-
+        for (const design of data.designs) {
 
 
             const card = document.createElement("div")
@@ -476,7 +468,7 @@ async function loadMyDesigns() {
 
             const title = document.createElement("div")
             title.className = "design-title"
-            title.textContent = `#${designID}`
+            title.textContent = `#${design.id}`
 
             const deleteButton = document.createElement("button")
             deleteButton.className = "design-delete"
@@ -498,6 +490,9 @@ async function loadMyDesigns() {
 
                 if (text === "SUCCESS") {
                     card.remove()
+                    if (grid.innerHTML=="") {
+                        grid.innerHTML= "<div class=\"design-title\" style=\"width:100%\">Ještě tady nic není :(</div>";
+                    }
                 } else {
                     alert(`Chyba: ${text}`)
                 }
@@ -515,12 +510,12 @@ async function loadMyDesigns() {
 
             // DRAW
             const [frontImage, backImage] = await Promise.all([
-                loadImage(designData.front),
-                loadImage(designData.back)
+                loadImage(design.front),
+                loadImage(design.back)
             ])
 
             const canvas = await drawCanvas(
-                designData.color,
+                design.color,
                 frontImage,
                 backImage
             )
@@ -537,19 +532,198 @@ async function loadMyDesigns() {
     }
     catch(e) {
         console.warn(e);
-        grid.innerHTML = "<div class=\"design-title\">Při načítáni nastala chyba :(</div>";
+        grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Při načítáni nastala chyba :(</div>";
     }
 
 }
 
-let lastSite = "W-Welcome"
+let lastSite = "W-Welcome";
 function switchSite(name) {
     if (name==lastSite) {return}
     document.getElementById(lastSite).style.display="none";
     document.getElementById(name).style.display="block";
     lastSite=name
     if (name=="W-MyDesigns") {
-        loadMyDesigns()
+        loadMyDesigns();
+    } else if (name=="W-Designs") {
+        loadDesigns();
+    }
+}
+
+let DesignPage = 1;
+
+async function loadDesigns() {
+
+    const grid = document.getElementById("DesignsGrid");
+
+    grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Probíhá načítání...</div>";
+
+    try {
+        const response = await fetch(
+            `{{ url_for('get_best_designs') }}?page=${DesignPage}`,
+            { cache: "no-cache" }
+        );
+
+        const data = await response.json();
+
+        if (data.status=="locked") {
+            document.getElementById("pageText").innerText = `Uzamčeno`;
+            document.getElementById("prevBtn").classList.add("disabled");
+            document.getElementById("nextBtn").classList.add("disabled");
+
+            grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Hlasování ještě nebylo odemčeno</div>";
+            return;
+        }
+
+        if (!data.designs || data.designs.length == 0) {
+            DesignPage = 1;
+            document.getElementById("pageText").innerText = `Stránka 1`;
+            document.getElementById("prevBtn").classList.add("disabled");
+            document.getElementById("nextBtn").classList.add("disabled");
+            grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Ještě tady nic není :(</div>";
+            return;
+        }
+
+        grid.innerHTML = "";
+
+        for (const design of data.designs) {
+
+            const isOwner = design.uid === USER.BIGY_ID;
+
+            const card = document.createElement("div");
+            card.className = "design-card";
+
+            // HEADER
+            const header = document.createElement("div");
+            header.className = "design-header";
+
+            const title = document.createElement("div");
+            title.className = "design-title";
+            title.textContent = `ID #${design.id} / UID #${design.uid}`;
+
+            header.appendChild(title);
+
+            const footer = document.createElement("div");
+            footer.className = "design-footer";
+            footer.textContent = `${design.votes} voleb`
+            // ACTION BUTTON
+            const actionButton = document.createElement("button");
+
+            if (isOwner) {
+
+                actionButton.className = "design-delete";
+                actionButton.textContent = "Smazat";
+
+                actionButton.onclick = async () => {
+
+                    if (!confirm("Opravdu smazat návrh?")) return;
+
+                    const res = await fetch(
+                        `/api/design/${design.id}/delete`,
+                        { method: "DELETE" }
+                    );
+
+                    const text = await res.text();
+
+                    if (text === "SUCCESS") {
+                        card.remove();
+
+                        if (grid.innerHTML == "") {
+                            grid.innerHTML = "<div class=\"design-title\">Ještě tady nic není :(</div>";
+                        }
+                    } else {
+                        alert(`Chyba: ${text}`);
+                    }
+                };
+
+            } else {
+
+                actionButton.className = "vote-btn";
+                actionButton.innerHTML = "<span>Volit</span>";
+                actionButton.classList.add("vote-btn");
+                if (design.id === data.voted) {
+                    actionButton.classList.add("active");
+                    actionButton.innerHTML = "<span>Zvoleno</span>";
+                }
+                actionButton.onclick = async () => {
+
+                    const res = await fetch("/api/vote", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            design_id: design.id
+                        })
+                    });
+
+                    const text = await res.text();
+
+                    if (text === "voted") {
+                        document.querySelectorAll(".vote-btn.active").forEach(btn => {
+                            btn.classList.remove("active");
+                            btn.querySelector("span").innerText = "Volit";
+                        });
+
+                        actionButton.classList.add("active");
+                        actionButton.querySelector("span").innerText = "Zvoleno";
+                    }
+
+                    else if (text === "unvoted") {
+                        actionButton.classList.remove("active");
+                        actionButton.querySelector("span").innerText = "Volit";
+                    }
+
+                    else {
+                        alert("Chyba");
+                    }
+                };
+            }
+
+            header.appendChild(actionButton);
+
+            // CANVAS
+            const zoomStage = document.createElement("zoom-stage");
+
+            const zoomContent = document.createElement("div");
+            zoomContent.className = "zoom-content";
+
+            const [frontImage, backImage] = await Promise.all([
+                loadImage(design.front),
+                loadImage(design.back)
+            ]);
+
+            const canvas = await drawCanvas(
+                design.color,
+                frontImage,
+                backImage
+            );
+
+            zoomContent.appendChild(canvas);
+            zoomStage.appendChild(zoomContent);
+
+            card.appendChild(header);
+            card.appendChild(zoomStage);
+            card.append(footer);
+            grid.appendChild(card);
+        }
+
+        DesignPage = data.page;
+        document.getElementById("pageText").innerText = `Stránka ${DesignPage}`;
+        if (DesignPage<=1) {
+            document.getElementById("prevBtn").classList.add("disabled");
+        } else {
+            document.getElementById("prevBtn").classList.remove("disabled");
+        }
+        if (data.has_next) {
+            document.getElementById("nextBtn").classList.remove("disabled");
+        } else {
+            document.getElementById("nextBtn").classList.add("disabled");
+        }
+
+    } catch (e) {
+        console.warn(e);
+        grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Při načítáni nastala chyba :(</div>";
     }
 }
 

@@ -339,6 +339,10 @@ zoom-stage {
     justify-content: space-between;
     align-items: center;
 }
+.design-footer {
+    text-align: left;
+    font-size: 80%;
+}
 
 .design-title {
     font-size: 18px;
@@ -358,4 +362,94 @@ zoom-stage {
 
 .design-delete:hover {
     opacity: 0.9;
+}
+
+.vote-btn {
+    position: relative;
+    overflow: hidden;
+
+    background: #888;
+    border: none;
+    color: white;
+    border-radius: 10px;
+
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+
+    min-width: 120px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.vote-btn span {
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.vote-btn {
+    background: #888;
+}
+.vote-btn:hover {
+    background: #666;
+}
+
+.vote-btn.active {
+    background: #22c55e;
+}
+
+.vote-btn.active:hover {
+    background: #ff4444;
+}
+
+
+.vote-btn.active:hover span {
+    transform: translateX(300%);
+}
+
+.vote-btn::before {
+    content: "Zrušit volbu";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%) translateX(-120%);
+    opacity: 0;
+    transition: all 0.2s ease;
+    font-size: 12px;
+}
+
+.vote-btn.active:hover::before {
+    transform: translateY(-50%) translateX(20%);
+    opacity: 1;
+}
+
+.pager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    margin-top: 24px;
+}
+
+.pager-btn {
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+
+    border-radius: 10px;
+    padding: 8px 12px;
+
+    cursor: pointer;
+    font-weight: 600;
+
+    transition: all 0.15s ease;
+}
+
+.pager-btn:hover:not(.disabled) {
+    background: #333;
+}
+
+.pager-btn.disabled {
+    opacity: 0.3;
+    cursor: default;
 }

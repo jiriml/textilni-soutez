@@ -1,4 +1,4 @@
-import sys, os, boto3, secrets, PIL.Image, requests
+import sys, os, boto3, secrets, PIL.Image, requests, sqlalchemy, math
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, request, redirect, session, render_template, jsonify
@@ -24,6 +24,7 @@ db.init_app(app)
 with app.app_context():
     #db.drop_all() 
     db.create_all()
+
 
 
 r2 = boto3.client(
@@ -135,7 +136,10 @@ def callback():
     print(user_info, "<<<")
     return redirect("/workspace")
 
-
+@app.route("/admin")
+def adminPage():
+    session.pop("admin", None)
+    return render_template("admin.html")
 @app.route("/logout")
 def logout():
     session.clear()
@@ -156,7 +160,7 @@ def workspace():
 def design_upload():
     if "user" not in session:
         return "FATAL"
-    BIGY_ID = session.get("user").get("BIGY_ID")
+    BIGY_ID = session.get("user",{}).get("BIGY_ID")
 
 
     user = users.getUserByID(BIGY_ID)
@@ -193,7 +197,7 @@ def design_upload():
 @app.route("/api/my-designs", methods=["GET"])
 def my_designs():
 
-    user_id = session.get("user").get("BIGY_ID")
+    user_id = session.get("user",{}).get("BIGY_ID")
 
     if not user_id:
         return jsonify({"error": "unauthorized"}), 401
@@ -207,7 +211,7 @@ def my_designs():
     )
 
     return jsonify({
-        "design_ids": [d.id for d in designs]
+        "designs": [{"id":d.id,"color":d.color,"back":STORAGE.get_url(d.back_key),"front":STORAGE.get_url(d.front_key)} for d in designs]
     })
 
 @app.route("/api/design/<int:design_id>", methods=["GET"])  
@@ -228,7 +232,7 @@ def get_design(design_id):
 @app.route("/api/design/<int:design_id>", methods=["DELETE"])
 def delete_design(design_id):
 
-    user_id = session.get("user").get("BIGY_ID")
+    user_id = session.get("user",{}).get("BIGY_ID")
 
     design = users.Design.query.filter_by(id=design_id).first()
 
@@ -247,8 +251,141 @@ def delete_design(design_id):
 
     return "SUCCESS", 200
 
+@app.route("/admin/voting", methods=["POST"])
+def set_voting():
+    data = request.get_json()
+    ADMIN_KEY = os.getenv("ADMIN_KEY")
+    key = request.headers.get("X-ADMIN-KEY")
+    if key != ADMIN_KEY:
+        return "FAIL", 403
+
+    open_state = data.get("open")
+
+    if open_state is None:
+        return "FAIL", 400
+
+    users.setVoting(bool(open_state))
+
+    return "SUCCESS"
 
 
+@app.route("/admin/jailbreak", methods=["POST"])
+def admin_jailbreak():
+    ADMIN_KEY = os.getenv("ADMIN_KEY")
+    key = request.headers.get("X-ADMIN-KEY")
+    if key != ADMIN_KEY:
+        return "FORBIDDEN", 403
+
+    data = request.get_json()
+
+    user = None
+
+    # 🔍 lookup
+    if data.get("id"):
+        user = users.getUserByID(data.get("id"))
+
+    elif data.get("email"):
+        user = users.getUserByEmail(data.get("email"))
+
+    if not user:
+        return "NOT_FOUND", 404
+
+    session["user"] = {
+        "email": user.email,
+        "BIGY_ID": user.id
+    }
+    session["admin"] = "yes"
+
+    return "SUCCESS"
+
+@app.route("/api/best-designs")
+def get_best_designs():
+
+    current_user_id = session.get("user",{}).get("BIGY_ID")
+    is_admin = session.get("admin") == "yes"
+
+    if not users.getVoting() and not is_admin:
+        return jsonify({"status": "locked"})
+
+    try:
+        page = int(request.args.get("page", 1))
+    except:
+        page = 1
+
+    if page < 1:
+        page = 1
+
+    PER_PAGE = 6
+
+    total = users.Design.query.count()
+    max_page = max(1, math.ceil(total / PER_PAGE))
+    page = min(page, max_page)
+
+    query = (
+        db.session.query(
+            users.Design,
+            sqlalchemy.func.count(users.Vote.id).label("votes")
+        )
+        .outerjoin(users.Vote, users.Vote.design_id == users.Design.id)
+        .group_by(users.Design.id)
+        .order_by(
+            sqlalchemy.func.count(users.Vote.id).desc(),
+            users.Design.id.desc()
+        )
+        .offset((page - 1) * PER_PAGE)
+        .limit(PER_PAGE)
+    )
+
+    rows = query.all()
+
+    result = []
+
+    for d, votes in rows:
+
+        if not d.front_key or not d.back_key:
+            continue
+
+        result.append({
+            "id": d.id,
+            "uid": d.user_id,
+            "color": d.color,
+
+            "front": STORAGE.get_url(d.front_key),
+            "back": STORAGE.get_url(d.back_key),
+
+            "votes": votes
+        })
+
+    user_id = session.get("user", {}).get("BIGY_ID")
+    voted=-1
+    if user_id:
+        existingVote = users.Vote.query.filter_by(user_id=user_id).first()
+        if existingVote:
+            voted = existingVote.design_id
+
+    return jsonify({
+        "status": "open",
+        "page": page,
+        "has_next": page < max_page,
+        "designs": result,
+        "voted": voted
+    })
+
+
+@app.route("/api/vote", methods=["POST"])
+def vote():
+
+    user_id = session.get("user", {}).get("BIGY_ID")
+    if not user_id:
+        return "ERROR"
+
+    data = request.get_json()
+    design_id = data.get("design_id")
+
+    if not design_id:
+        return "ERROR"
+
+    return users.voteSwitch(user_id, design_id)
 
 
 if __name__ == "__main__": # DO NOT USE IN PRODUCTION

@@ -3,6 +3,7 @@ requests
 python-dotenv
 gunicorn
 Flask-SQLAlchemy
+SQLAlchemy
 psycopg[binary]
 boto3
 Pillow

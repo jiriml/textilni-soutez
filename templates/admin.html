@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Admin Panel</title>
+
+<style>
+body {
+    margin: 0;
+    background: #0b1b3a;
+    font-family: Arial;
+    font-size: 12px;
+}
+
+.window {
+    width: 440px;
+    margin: 40px auto;
+    background: #e9eef7;
+    border: 2px solid #9aa7c7;
+}
+
+.header {
+    background: #2b4a8a;
+    color: white;
+    padding: 6px;
+    font-weight: bold;
+}
+
+.content {
+    padding: 10px;
+}
+
+label {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+}
+
+input, select {
+    width: 100%;
+    padding: 5px;
+    margin-top: 2px;
+    border: 1px solid #999;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 6px;
+    background: #d7dce6;
+    border: 1px solid #666;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #c9d1e0;
+}
+
+.status {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #222;
+}
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+<div class="header">
+Admin Control Panel
+</div>
+
+<div class="content">
+
+<label>Admin API Key</label>
+<input
+    id="key"
+    type="password"
+    autocomplete="off"
+    autocapitalize="off"
+    spellcheck="false"
+/>
+
+<label>Voting state</label>
+<input type="checkbox" id="vote">
+
+<label>User mode</label>
+<select id="type">
+    <option value="id">ID</option>
+    <option value="email">Email</option>
+</select>
+
+<label>Value</label>
+<input id="value">
+
+<button onclick="applyUser()">Apply user context</button>
+
+<div class="status" id="msg"></div>
+
+</div>
+
+</div>
+
+<script>
+async function loadState() {
+    try{
+        const r = await fetch("/api/get_best_designs?page=1", {
+            headers: {
+                "X-ADMIN-KEY": getKey()
+            }
+        })
+
+        const data = await r.json()
+
+
+        const vote = document.getElementById("vote")
+
+        if (data.status === "locked") {
+            vote.checked = false
+            msg("voting: locked")
+        } else {
+            vote.checked = true
+            msg("voting: open")
+        }
+    } catch(e) {msg("state load failed")}
+}
+loadState()
+function msg(t) {
+    document.getElementById("msg").innerText = t
+}
+
+function getKey() {
+    return document.getElementById("key").value
+}
+
+async function api(url, body) {
+    return fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-ADMIN-KEY": getKey()
+        },
+        body: JSON.stringify(body || {})
+    })
+}
+
+/* voting */
+document.getElementById("vote").onchange = async (e) => {
+    const r = await api("/admin/voting", {
+        open: e.target.checked
+    })
+
+    const t = await r.text()
+    msg(t === "SUCCESS" ? "OK" : "FAIL")
+}
+
+/* user switch */
+async function applyUser() {
+    const type = document.getElementById("type").value
+    const value = document.getElementById("value").value
+
+    let payload = {}
+
+    if (type === "id") payload.id = value
+    else payload.email = value
+
+    const r = await api("/admin/jailbreak", payload)
+
+    const t = await r.text()
+    msg(t === "SUCCESS" ? "OK" : "FAIL")
+    if (t==="SUCCESS") {
+        window.location.href = "/workspace";
+    }
+}
+</script>
+
+</body>
+</html>

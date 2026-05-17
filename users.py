@@ -45,6 +45,7 @@ def getOrCreateUser(email):
 
     return createUser(email)
 
+# Design
 class Design(db.Model):
     __tablename__ = "designs"
 
@@ -121,3 +122,77 @@ def delete_design(design_id, storage=None):
 
 def get_user_designs(user_id):
     return Design.query.filter_by(user_id=user_id).all()
+
+
+# AppConfig
+
+class Settings(db.Model):
+    __tablename__ = "settings"
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    voting_open = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False
+    )
+
+def setVoting(yesorno):
+    settings = Settings.query.first()
+
+    if not settings:
+        settings = Settings(voting_open=yesorno)
+        db.session.add(settings)
+    else:
+        settings.voting_open = yesorno
+
+    db.session.commit()
+
+def getVoting():
+    try:
+        settings = Settings.query.first()
+        return settings.voting_open
+    except:
+        setVoting(False)
+        return False
+    
+
+class Vote(db.Model):
+    __tablename__ = "votes"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), unique=True)
+    design_id = db.Column(db.BigInteger, db.ForeignKey("designs.id"))
+    __table_args__ = (
+    db.UniqueConstraint("user_id", "design_id"),
+    )
+
+
+def voteSwitch(userId, designId):
+
+
+    design = Design.query.get(designId)
+    if not design:
+        return "ERROR"
+
+    if design.user_id == userId:
+        return "ERROR"
+
+    existing = Vote.query.filter_by(user_id=userId).first()
+
+    if not existing:
+        db.session.add(Vote(user_id=userId, design_id=designId))
+        db.session.commit()
+        return "voted"
+
+    if existing.design_id == designId:
+        db.session.delete(existing)
+        db.session.commit()
+        return "unvoted"
+
+    existing.design_id = designId
+    db.session.commit()
+    return "voted"
