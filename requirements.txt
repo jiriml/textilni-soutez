@@ -7,3 +7,4 @@ SQLAlchemy
 psycopg[binary]
 boto3
 Pillow
+Flask-WTF

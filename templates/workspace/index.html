@@ -91,7 +91,10 @@
                     <button onclick="downloadTemplate()">Stáhnout šablonu</button>
                     <button onclick="uploadTemplate('front')">Nahrát přední šablonu</button>
                     <button onclick="uploadTemplate('back')">Nahrát zadní šablonu</button>
-                    <p style="font-size: 75%;"><input type="checkbox" id="UploadTerms"> Nahráním souhlasím s poskytnutím komerčńi licence provozovateli aplikace</p><br>
+                    <p style="font-size: 75%;">
+                        <input type="checkbox" id="UploadTerms"> Potvrzuji, že mi je alespoň 15 let a souhlasím s podmínkami použití a poskytnutím komerční licence tohoto návrhu provozovateli aplikace.
+                        <a href="{{ url_for('termsOfUse') }}#AutorRights" target="_blank" >Zásady autorských práv</a>
+                    </p><br>
                     <button onclick="uploadDesign()">Dokončit</button>
                 </div>
             </div>
@@ -104,6 +107,7 @@
 <!-- Config.js -->
 <script defer>
     const USER = {{ user | tojson }}
+    const CSRF_TOKEN = "{{ csrf_token }}"
     const TshirtDimensions = [5258, 5569]
     const zoneDimensions = [2687, 4513]
     const zoneOffset = [1285, 800]
@@ -165,8 +169,9 @@
         const ctx = drawCanvas.getContext("2d");
 
 
-        const baseImg = await loadImage("{{ url_for('static', filename='images/canvasTshirt.png') }}");
-
+        //const baseImg = await loadImage("{{ url_for('static', filename='images/canvasTshirt.png') }}");
+        const baseFront = await loadImage("{{ url_for('static', filename='images/canvasFront.png') }}");
+        const baseBack = await loadImage("{{ url_for('static', filename='images/canvasBack.png') }}");
         // === HLAVNÍ CANVAS ===
         ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
@@ -206,8 +211,8 @@
         // === RENDER LAYER ===
 
         // 4️⃣ nakresli obě trička (maska + shading základ)
-        ctx.drawImage(baseImg, 0, 0);
-        ctx.drawImage(baseImg, TshirtDimensions[0], 0);
+        ctx.drawImage(baseFront, 0, 0);
+        ctx.drawImage(baseBack, TshirtDimensions[0], 0);
 
         // 5️⃣ aplikuj template jen tam kde je tričko
         ctx.globalCompositeOperation = "source-in";
@@ -215,8 +220,8 @@
 
         // 6️⃣ shading (detaily trička)
         ctx.globalCompositeOperation = "multiply";
-        ctx.drawImage(baseImg, 0, 0);
-        ctx.drawImage(baseImg, TshirtDimensions[0], 0);
+        ctx.drawImage(baseFront, 0, 0);
+        ctx.drawImage(baseBack, TshirtDimensions[0], 0);
 
         // reset
         ctx.globalCompositeOperation = "source-over";
@@ -241,7 +246,7 @@
         canvas.toDataURL("image/png")
         canvas.width = width;
         canvas.height = height;
-        const baseImg = await loadImage("{{ url_for('static', filename='images/templateshirt.png') }}");
+        const baseImg = await loadImage("{{ url_for('static', filename='images/templateFront.png') }}");
         const zoneImg = await loadImage("{{ url_for('static', filename='images/zone.png') }}");
         ctx.drawImage(baseImg, 0, 0, width, height);
         ctx.globalCompositeOperation = "source-in";
@@ -480,9 +485,12 @@ async function loadMyDesigns() {
                     return
 
                 const res = await fetch(
-                    `/api/design/${designID}`,
+                    `/api/design/${design.id}`,
                     {
-                        method: "DELETE"
+                        method: "DELETE",
+                        headers: {
+                            "X-CSRF-Token": CSRF_TOKEN
+                        }
                     }
                 )
 
@@ -620,7 +628,12 @@ async function loadDesigns() {
 
                     const res = await fetch(
                         `/api/design/${design.id}/delete`,
-                        { method: "DELETE" }
+                        { 
+                            method: "DELETE",
+                            headers: {
+                                "X-CSRF-Token": CSRF_TOKEN
+                            }
+                        }
                     );
 
                     const text = await res.text();
@@ -650,7 +663,8 @@ async function loadDesigns() {
                     const res = await fetch("/api/vote", {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json"
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": CSRF_TOKEN
                         },
                         body: JSON.stringify({
                             design_id: design.id

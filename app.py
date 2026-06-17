@@ -2,6 +2,8 @@ import sys, os, boto3, secrets, PIL.Image, requests, sqlalchemy, math
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, request, redirect, session, render_template, jsonify
+from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf, validate_csrf
 from extensions import db
 from storage import Storage
 import users
@@ -9,7 +11,11 @@ from botocore.config import Config as BotoConfig
 
 #Secrets and flask app init
 app = Flask(__name__)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("REDIRECT_URI", "").startswith("https://")
 app.secret_key = os.environ.get("FLASK_SECRET")
+csrf = CSRFProtect(app)
 CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.environ.get("REDIRECT_URI", "http://localhost:1234/callback") 
@@ -151,12 +157,15 @@ def workspace():
     if "user" not in session:
         return redirect("/")
 
-    return render_template("workspace/index.html", user=session.get("user"))
+    # generate a per-session CSRF token and pass it to the workspace template
+    csrf_token = generate_csrf()
+    return render_template("workspace/index.html", user=session.get("user"), csrf_token=csrf_token)
 
 
 
 
 @app.route("/api/design/upload", methods=["POST"])
+@csrf.exempt
 def design_upload():
     if "user" not in session:
         return "FATAL"
@@ -232,6 +241,13 @@ def get_design(design_id):
 @app.route("/api/design/<int:design_id>", methods=["DELETE"])
 def delete_design(design_id):
 
+    # CSRF validation (expect token in header or form)
+    token = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
+    try:
+        validate_csrf(token)
+    except Exception:
+        return "CSRF", 403
+
     user_id = session.get("user",{}).get("BIGY_ID")
 
     design = users.Design.query.filter_by(id=design_id).first()
@@ -242,16 +258,16 @@ def delete_design(design_id):
     print(user_id,design.user_id)
 
     is_owner = design.user_id == user_id
-    is_admin = False
 
-    if not (is_owner or is_admin):
+    if not (is_owner or session.get("admin") == "yes"):
         return "FORBIDDEN", 403
 
-    users.delete_design(design_id=design_id)
+    users.delete_design(design_id=design_id, storage=STORAGE)
 
     return "SUCCESS", 200
 
 @app.route("/admin/voting", methods=["POST"])
+@csrf.exempt
 def set_voting():
     data = request.get_json()
     ADMIN_KEY = os.getenv("ADMIN_KEY")
@@ -270,6 +286,7 @@ def set_voting():
 
 
 @app.route("/admin/jailbreak", methods=["POST"])
+@csrf.exempt
 def admin_jailbreak():
     ADMIN_KEY = os.getenv("ADMIN_KEY")
     key = request.headers.get("X-ADMIN-KEY")
@@ -374,6 +391,13 @@ def get_best_designs():
 
 @app.route("/api/vote", methods=["POST"])
 def vote():
+
+    # CSRF validation (expect token in header or form)
+    token = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")
+    try:
+        validate_csrf(token)
+    except Exception:
+        return "CSRF", 403
 
     user_id = session.get("user", {}).get("BIGY_ID")
     if not user_id:
