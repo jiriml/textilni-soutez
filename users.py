@@ -57,7 +57,7 @@ class Design(db.Model):
     color = db.Column(db.String)
 
 def can_upload(user_id):
-    return Design.query.filter_by(user_id=user_id).count() < 3
+    return Design.query.filter_by(user_id=user_id).count() < 93
 
 def upload_design(user_id, front_file, back_file, color, storage):
     try:

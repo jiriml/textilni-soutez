@@ -215,7 +215,7 @@ def my_designs():
         users.Design.query
         .filter(users.Design.user_id == user_id)
         .order_by(users.Design.id.desc())
-        .limit(3)
+        .limit(93)
         .all()
     )
 
