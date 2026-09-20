@@ -1,4 +1,13 @@
+import datetime
+import os
+
 from extensions import db
+
+
+try:
+    MAX_VOTES_PER_USER = max(1, int(os.environ.get("MAX_VOTES_PER_USER", "1")))
+except ValueError:
+    MAX_VOTES_PER_USER = 1
 
 
 class User(db.Model):
@@ -55,6 +64,11 @@ class Design(db.Model):
     front_key = db.Column(db.String)
     back_key = db.Column(db.String)
     color = db.Column(db.String)
+    created_at = db.Column(
+        db.DateTime,
+        nullable=True,
+        default=datetime.datetime.utcnow
+    )
 
 def can_upload(user_id):
     return Design.query.filter_by(user_id=user_id).count() < 93
@@ -114,6 +128,9 @@ def delete_design(design_id, storage=None):
         print("Storage delete failed:", e)
         return False, "storage_error"
 
+    Vote.query.filter_by(design_id=design_id).delete(
+        synchronize_session=False
+    )
     db.session.delete(design)
     db.session.commit()
 
@@ -139,24 +156,49 @@ class Settings(db.Model):
         default=False
     )
 
-def setVoting(yesorno):
+    mode = db.Column(
+        db.String(20),
+        nullable=False,
+        default="designing"
+    )
+
+MODES = {"designing", "voting", "finished"}
+
+
+def setMode(mode):
+    if mode not in MODES:
+        return False
+
     settings = Settings.query.first()
 
     if not settings:
-        settings = Settings(voting_open=yesorno)
+        settings = Settings(voting_open=mode == "voting", mode=mode)
         db.session.add(settings)
     else:
-        settings.voting_open = yesorno
+        settings.mode = mode
+        settings.voting_open = mode == "voting"
 
     db.session.commit()
+    return True
 
-def getVoting():
+
+def getMode():
     try:
         settings = Settings.query.first()
-        return settings.voting_open
+        if not settings:
+            setMode("designing")
+            return "designing"
+        return settings.mode
     except:
-        setVoting(False)
-        return False
+        return "designing"
+
+
+def setVoting(yesorno):
+    return setMode("voting" if yesorno else "designing")
+
+
+def getVoting():
+    return getMode() == "voting"
     
 
 class Vote(db.Model):
@@ -164,7 +206,7 @@ class Vote(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), unique=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id"), nullable=False)
     design_id = db.Column(db.BigInteger, db.ForeignKey("designs.id"))
     __table_args__ = (
     db.UniqueConstraint("user_id", "design_id"),
@@ -181,18 +223,17 @@ def voteSwitch(userId, designId):
     if design.user_id == userId:
         return "ERROR"
 
-    existing = Vote.query.filter_by(user_id=userId).first()
+    existing = Vote.query.filter_by(user_id=userId, design_id=designId).first()
 
-    if not existing:
-        db.session.add(Vote(user_id=userId, design_id=designId))
-        db.session.commit()
-        return "voted"
-
-    if existing.design_id == designId:
+    if existing:
         db.session.delete(existing)
         db.session.commit()
         return "unvoted"
 
-    existing.design_id = designId
+    vote_count = Vote.query.filter_by(user_id=userId).count()
+    if vote_count >= MAX_VOTES_PER_USER:
+        return "limit"
+
+    db.session.add(Vote(user_id=userId, design_id=designId))
     db.session.commit()
     return "voted"

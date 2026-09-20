@@ -33,7 +33,11 @@
 
 <div> <!-- All the windows will be here-->
     <div id="W-Welcome" >
-
+        <div class="welcome-grid-section">
+            <div><h1>Jak na to?</h1><br><iframe width="560" height="315" src="https://www.youtube.com/embed/QBIVOImf_vI?si=8lJPfNe_rcDcyrKT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+            <div><img src="{{ url_for('static', filename='images/plakat.png') }}" style="height: min(600px, 200vw, 80vh)"></div>
+        </div>
+        
     </div>
     <div id="W-Designs" style="display: none;">
         <button class="funbutton" style="margin:8px" onclick="loadDesigns()">↻</button>
@@ -42,11 +46,11 @@
 
             </div>
             <div class="pager">
-                <button id="prevBtn" class="pager-btn" onclick="DesignPage-=1;loadDesigns()">◀</button>
+                <button id="prevBtn" class="pager-btn" onclick="changePage(-1)">◀</button>
 
                 <div id="pageText" class="pager-text">Stránka 1</div>
 
-                <button id="nextBtn" class="pager-btn" onclick="DesignPage+=1;loadDesigns()">▶</button>
+                <button id="nextBtn" class="pager-btn" onclick="changePage(1)">▶</button>
             </div>
         </div>
     </div>
@@ -54,7 +58,7 @@
         <div id="myDesignsGrid" class="design-grid">
 
         </div>
-        <button class="funbutton" style="margin-left:8px" onclick="openModal()">Vytvořit návrh</button><button class="funbutton" style="margin-left:8px" onclick="loadMyDesigns()">↻</button>
+        <button class="funbutton" style="margin-left:8px;{% if competition_mode != 'designing' %} display:none;{% endif %}" onclick="openModal()">Vytvořit návrh</button><button class="funbutton" style="margin-left:8px" onclick="loadMyDesigns()">↻</button>
     </div>
 </div>
 
@@ -108,6 +112,9 @@
 <script defer>
     const USER = {{ user | tojson }}
     const CSRF_TOKEN = "{{ csrf_token }}"
+    const IS_ADMIN = {{ is_admin | tojson }}
+    const MAX_VOTES = {{ max_votes }}
+    const COMPETITION_MODE = {{ competition_mode | tojson }}
     const TshirtDimensions = [5258, 5569]
     const zoneDimensions = [2687, 4513]
     const zoneOffset = [1285, 800]
@@ -120,6 +127,10 @@
 
         // OPEN MODAL
     function openModal() {
+        if (COMPETITION_MODE !== "designing") {
+            showError("Navrhování je uzavřené.");
+            return;
+        }
         document.getElementById("colorSelect").value = "#eeeeee"
         modal.classList.remove("hidden");
         frontImage = getClearCut();
@@ -355,6 +366,11 @@
                 return
             }
 
+            if (data === "CLOSED") {
+                showError("Navrhování je už uzavřené.")
+                return
+            }
+
             showError(`Chyba: ${data.error}`)
 
         } catch (err) {
@@ -560,6 +576,12 @@ function switchSite(name) {
 
 let DesignPage = 1;
 
+function changePage(delta) {
+    DesignPage = Math.max(1, DesignPage + delta);
+    document.getElementById("pageText").innerText = `Stránka ${DesignPage}`;
+    loadDesigns();
+}
+
 async function loadDesigns() {
 
     const grid = document.getElementById("DesignsGrid");
@@ -573,6 +595,14 @@ async function loadDesigns() {
         );
 
         const data = await response.json();
+
+        if (data.status === "designing") {
+            document.getElementById("pageText").innerText = "Navrhování";
+            document.getElementById("prevBtn").classList.add("disabled");
+            document.getElementById("nextBtn").classList.add("disabled");
+            grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Ještě se nehlasuje :D</div>";
+            return;
+        }
 
         if (data.status=="locked") {
             document.getElementById("pageText").innerText = `Uzamčeno`;
@@ -607,27 +637,32 @@ async function loadDesigns() {
 
             const title = document.createElement("div");
             title.className = "design-title";
-            title.textContent = `ID #${design.id} / UID #${design.uid}`;
+            title.textContent = IS_ADMIN
+                ? `ID #${design.id} / UID #${design.uid}`
+                : `ID #${design.id}`;
 
             header.appendChild(title);
 
             const footer = document.createElement("div");
             footer.className = "design-footer";
-            footer.textContent = `${design.votes} voleb`
-            // ACTION BUTTON
-            const actionButton = document.createElement("button");
+            if (IS_ADMIN || data.mode === "finished") {
+                footer.textContent = `${design.votes} voleb`;
+            }
+            const actions = document.createElement("div");
+            actions.className = "design-actions";
 
-            if (isOwner) {
+            if (isOwner || IS_ADMIN) {
 
-                actionButton.className = "design-delete";
-                actionButton.textContent = "Smazat";
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "design-delete";
+                deleteButton.textContent = "Smazat";
 
-                actionButton.onclick = async () => {
+                deleteButton.onclick = async () => {
 
                     if (!confirm("Opravdu smazat návrh?")) return;
 
                     const res = await fetch(
-                        `/api/design/${design.id}/delete`,
+                        `/api/design/${design.id}`,
                         { 
                             method: "DELETE",
                             headers: {
@@ -648,13 +683,17 @@ async function loadDesigns() {
                         alert(`Chyba: ${text}`);
                     }
                 };
+                if (data.mode !== "finished") footer.appendChild(deleteButton);
 
-            } else {
+            }
+
+            if (!isOwner && data.mode === "voting") {
+                const actionButton = document.createElement("button");
 
                 actionButton.className = "vote-btn";
                 actionButton.innerHTML = "<span>Volit</span>";
                 actionButton.classList.add("vote-btn");
-                if (design.id === data.voted) {
+                if (data.voted.includes(design.id)) {
                     actionButton.classList.add("active");
                     actionButton.innerHTML = "<span>Zvoleno</span>";
                 }
@@ -674,11 +713,6 @@ async function loadDesigns() {
                     const text = await res.text();
 
                     if (text === "voted") {
-                        document.querySelectorAll(".vote-btn.active").forEach(btn => {
-                            btn.classList.remove("active");
-                            btn.querySelector("span").innerText = "Volit";
-                        });
-
                         actionButton.classList.add("active");
                         actionButton.querySelector("span").innerText = "Zvoleno";
                     }
@@ -688,13 +722,17 @@ async function loadDesigns() {
                         actionButton.querySelector("span").innerText = "Volit";
                     }
 
+                    else if (text === "LIMIT") {
+                        alert(`Můžeš vybrat nejvýše ${MAX_VOTES} návrhů.`);
+                    }
+
                     else {
                         alert("Chyba");
                     }
                 };
+                actions.appendChild(actionButton);
             }
-
-            header.appendChild(actionButton);
+            header.appendChild(actions);
 
             // CANVAS
             const zoomStage = document.createElement("zoom-stage");

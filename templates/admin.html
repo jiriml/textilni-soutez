@@ -85,8 +85,13 @@ Admin Control Panel
     spellcheck="false"
 />
 
-<label>Voting state</label>
-<input type="checkbox" id="vote">
+<label>Competition mode</label>
+<select id="mode">
+    <option value="designing">Navrhování</option>
+    <option value="voting">Hlasování</option>
+    <option value="finished">Konec soutěže</option>
+</select>
+
 
 <label>User mode</label>
 <select id="type">
@@ -106,9 +111,12 @@ Admin Control Panel
 </div>
 
 <script>
+document.getElementById("key").addEventListener("change", loadState)
+
 async function loadState() {
+    if (!getKey()) return
     try{
-        const r = await fetch("/api/get_best_designs?page=1", {
+        const r = await fetch("/admin/state", {
             headers: {
                 "X-ADMIN-KEY": getKey()
             }
@@ -117,18 +125,10 @@ async function loadState() {
         const data = await r.json()
 
 
-        const vote = document.getElementById("vote")
-
-        if (data.status === "locked") {
-            vote.checked = false
-            msg("voting: locked")
-        } else {
-            vote.checked = true
-            msg("voting: open")
-        }
+        document.getElementById("mode").value = data.mode
+        msg(`režim: ${data.mode}`)
     } catch(e) {msg("state load failed")}
 }
-loadState()
 function msg(t) {
     document.getElementById("msg").innerText = t
 }
@@ -148,15 +148,16 @@ async function api(url, body) {
     })
 }
 
-/* voting */
-document.getElementById("vote").onchange = async (e) => {
-    const r = await api("/admin/voting", {
-        open: e.target.checked
+async function applyMode() {
+    const r = await api("/admin/mode", {
+        mode: document.getElementById("mode").value
     })
 
     const t = await r.text()
     msg(t === "SUCCESS" ? "OK" : "FAIL")
 }
+
+document.getElementById("mode").addEventListener("change", applyMode)
 
 /* user switch */
 async function applyUser() {

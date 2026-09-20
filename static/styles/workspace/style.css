@@ -340,6 +340,10 @@ zoom-stage {
     align-items: center;
 }
 .design-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     text-align: left;
     font-size: 80%;
 }
@@ -348,6 +352,12 @@ zoom-stage {
     font-size: 18px;
     font-weight: 700;
     color: white;
+}
+
+.design-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .design-delete {
@@ -452,4 +462,20 @@ zoom-stage {
 .pager-btn.disabled {
     opacity: 0.3;
     cursor: default;
+}
+
+.welcome-grid-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Dva stejné sloupce pro desktop */
+  gap: 30px;
+  justify-items: center; /* Horizontálně vycentruje video i plakát */
+  align-items: center; /* Vertikálně vycentruje video i plakát */
+  min-height: 80vh;   /* Zabere většinu výšky obrazovky */
+}
+
+@media (max-width: 1000px) {
+  .welcome-grid-section {
+    justify-items: center !important; /* Horizontálně vycentruje video i plakát */
+    grid-template-columns: 1fr; /* Na mobilu pod sebou */
+  }
 }
