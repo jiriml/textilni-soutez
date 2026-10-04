@@ -33,19 +33,19 @@
 
 <div> <!-- All the windows will be here-->
     <div id="W-Welcome" >
-        <p>Vedení školy si vyhrazuje právo vyřadit návrhy, které shledá nevhodnými. </p>
+        <section class="welcome-notice" aria-label="Důležité informace k soutěži">
+            <p>Vedení školy si vyhrazuje právo vyřadit návrhy, které bude považovat za nevhodné.</p>
+        </section>
         <div class="welcome-grid-section">
-            <div><h1>Jak na to?</h1><br><iframe 
-  width="560" 
-  height="315" 
+            <div class="welcome-media"><h1>Jak na to?</h1><br><iframe
   src="https://www.youtube.com/embed/uPYTiWPaH3U?si=izvCDK13ZCrMN12U&cc_load_policy=1" 
   title="YouTube video player" 
   frameborder="0" 
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+  <!-- allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"  -->
   referrerpolicy="strict-origin-when-cross-origin" 
   allowfullscreen>
 </iframe></div>
-            <div><img src="{{ url_for('static', filename='images/plakat.png') }}" style="height: min(600px, 200vw, 80vh)"></div>
+                        <div class="welcome-media"><img class="welcome-poster" src="{{ url_for('static', filename='images/plakat.png') }}" alt="Plakát textilní soutěže"></div>
         </div>
         
     </div>

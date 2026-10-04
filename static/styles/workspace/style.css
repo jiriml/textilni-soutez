@@ -473,6 +473,58 @@ zoom-stage {
   min-height: 80vh;   /* Zabere většinu výšky obrazovky */
 }
 
+.welcome-notice {
+    width: min(calc(100% - 32px), 1100px);
+    margin: 20px auto 16px;
+    padding: 16px 20px;
+    border-left: 4px solid #f0b44d;
+    background: #24211b;
+    color: #f4ead6;
+    line-height: 1.5;
+}
+
+.welcome-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 40px;
+    width: min(calc(100% - 32px), 1100px);
+    margin: 0 auto 12px;
+    padding: 0 20px;
+    color: #f4ead6;
+}
+
+.welcome-dates p {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.welcome-dates strong {
+    color: #f0b44d;
+}
+
+.welcome-media {
+    width: min(560px, 80vw);
+    max-width: 80vw;
+}
+
+.welcome-media iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+}
+
+.welcome-poster {
+    display: block;
+    width: 100%;
+    max-width: 80vw;
+    max-height: 80vh;
+    height: auto;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
 @media (max-width: 1000px) {
   .welcome-grid-section {
     justify-items: center !important; /* Horizontálně vycentruje video i plakát */
