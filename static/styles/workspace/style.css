@@ -483,6 +483,53 @@ zoom-stage {
     line-height: 1.5;
 }
 
+.competition-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(calc(100% - 32px), 1100px);
+    margin: 20px auto 0;
+    padding: 16px 20px;
+    border-left: 4px solid #55aaff;
+    background: #172432;
+    color: #e5f2ff;
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1.5;
+    transition: background 0.2s ease;
+}
+
+.competition-status:hover {
+    background: #1d3042;
+}
+
+.competition-status-cursor {
+    image-rendering: pixelated;
+    display: block;
+    width: 18px;
+    height: 24px;
+    margin-left: -2px;
+    object-fit: contain;
+    transform: rotate(-15deg);
+}
+
+.competition-status-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.competition-status-label {
+    flex: 0 0 auto;
+}
+
+.competition-status-arrow {
+    color: #75bdff;
+    font-size: 1.5em;
+    line-height: 1;
+}
+
 .welcome-dates {
     display: flex;
     flex-wrap: wrap;

@@ -33,6 +33,13 @@
 
 <div> <!-- All the windows will be here-->
     <div id="W-Welcome" >
+        {% if competition_mode == 'designing' %}
+        <a class="competition-status" href="#" onclick="switchSite('W-MyDesigns'); return false;"><span class="competition-status-content"><span class="competition-status-label">Teď navrhujeme</span><img class="competition-status-cursor" src="{{ url_for('static', filename='images/cursor.png') }}" alt=""></span><span class="competition-status-arrow" aria-hidden="true">&gt;</span></a>
+        {% elif competition_mode == 'voting' %}
+        <a class="competition-status" href="#" onclick="switchSite('W-Designs'); return false;"><span class="competition-status-content"><span class="competition-status-label">Teď hlasujeme</span><img class="competition-status-cursor" src="{{ url_for('static', filename='images/cursor.png') }}" alt=""></span><span class="competition-status-arrow" aria-hidden="true">&gt;</span></a>
+        {% else %}
+        <a class="competition-status" href="#" onclick="switchSite('W-Designs'); return false;"><span class="competition-status-content"><span class="competition-status-label">Výsledky soutěže</span><img class="competition-status-cursor" src="{{ url_for('static', filename='images/cursor.png') }}" alt=""></span><span class="competition-status-arrow" aria-hidden="true">&gt;</span></a>
+        {% endif %}
         <section class="welcome-notice" aria-label="Důležité informace k soutěži">
             <p>Vedení školy si vyhrazuje právo vyřadit návrhy, které bude považovat za nevhodné.</p>
         </section>
