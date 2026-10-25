@@ -193,7 +193,6 @@
         drawCanvas.width = Math.round(canvasWidth * renderScale);
         drawCanvas.height = Math.round(canvasHeight * renderScale);
         const ctx = drawCanvas.getContext("2d");
-        ctx.scale(renderScale, renderScale);
 
         const usePreviewAssets = renderScale < 1;
         const baseFront = await loadImage(
@@ -207,7 +206,7 @@
                 : "{{ url_for('static', filename='images/canvasBack.png') }}"
         );
         // === HLAVNÍ CANVAS ===
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
         // === TEMPLATE CANVAS (data layer) ===
         const template = document.createElement("canvas");
@@ -215,20 +214,19 @@
         template.height = drawCanvas.height;
 
         const tctx = template.getContext("2d");
-        tctx.scale(renderScale, renderScale);
 
         // 1️⃣ barva (pozadí)
         tctx.fillStyle = color;
-        tctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        tctx.fillRect(0, 0, template.width, template.height);
 
         // 2️⃣ FRONT image
         if (front) {
             tctx.drawImage(
                 front,
-                zoneOffset[0] + 10,
-                zoneOffset[1] + 10,
-                zoneDimensions[0] - 20,
-                zoneDimensions[1] - 20
+                (zoneOffset[0] + 10) * renderScale,
+                (zoneOffset[1] + 10) * renderScale,
+                (zoneDimensions[0] - 20) * renderScale,
+                (zoneDimensions[1] - 20) * renderScale
             );
         }
 
@@ -236,18 +234,20 @@
         if (back) {
             tctx.drawImage(
                 back,
-                TshirtDimensions[0] + zoneOffset[0] + 10,
-                zoneOffset[1] + 10,
-                zoneDimensions[0] - 20,
-                zoneDimensions[1] - 20
+                (TshirtDimensions[0] + zoneOffset[0] + 10) * renderScale,
+                (zoneOffset[1] + 10) * renderScale,
+                (zoneDimensions[0] - 20) * renderScale,
+                (zoneDimensions[1] - 20) * renderScale
             );
         }
 
         // === RENDER LAYER ===
 
         // 4️⃣ nakresli obě trička (maska + shading základ)
-        ctx.drawImage(baseFront, 0, 0, TshirtDimensions[0], TshirtDimensions[1]);
-        ctx.drawImage(baseBack, TshirtDimensions[0], 0, TshirtDimensions[0], TshirtDimensions[1]);
+        const shirtWidth = TshirtDimensions[0] * renderScale;
+        const shirtHeight = TshirtDimensions[1] * renderScale;
+        ctx.drawImage(baseFront, 0, 0, shirtWidth, shirtHeight);
+        ctx.drawImage(baseBack, shirtWidth, 0, shirtWidth, shirtHeight);
 
         // 5️⃣ aplikuj template jen tam kde je tričko
         ctx.globalCompositeOperation = "source-in";
@@ -255,8 +255,8 @@
 
         // 6️⃣ shading (detaily trička)
         ctx.globalCompositeOperation = "multiply";
-        ctx.drawImage(baseFront, 0, 0, TshirtDimensions[0], TshirtDimensions[1]);
-        ctx.drawImage(baseBack, TshirtDimensions[0], 0, TshirtDimensions[0], TshirtDimensions[1]);
+        ctx.drawImage(baseFront, 0, 0, shirtWidth, shirtHeight);
+        ctx.drawImage(baseBack, shirtWidth, 0, shirtWidth, shirtHeight);
 
         // reset
         ctx.globalCompositeOperation = "source-over";
