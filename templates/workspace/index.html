@@ -488,10 +488,11 @@ async function loadMyDesigns() {
 
         if (data.designs.length == 0) {
             grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Ještě tady nic není :(</div>";
-        } else {grid.innerHTML=""}
+            return;
+        }
 
+        grid.innerHTML = "";
         for (const design of data.designs) {
-
 
             const card = document.createElement("div")
             card.className = "design-card"
@@ -545,26 +546,16 @@ async function loadMyDesigns() {
             const zoomContent = document.createElement("div")
             zoomContent.className = "zoom-content"
 
-            // DRAW
-            const [frontImage, backImage] = await Promise.all([
-                loadImage(design.front),
-                loadImage(design.back)
-            ])
-
-            const canvas = await drawCanvas(
-                design.color,
-                frontImage,
-                backImage
-            )
-
-            zoomContent.appendChild(canvas)
+            const loading = document.createElement("div")
+            loading.className = "design-title"
+            loading.textContent = "Načítá se..."
+            zoomContent.appendChild(loading)
             zoomStage.appendChild(zoomContent)
 
             card.appendChild(header)
             card.appendChild(zoomStage)
-
             grid.appendChild(card)
-
+            loadMyDesign(design, zoomContent, loading)
         }
     }
     catch(e) {
@@ -572,6 +563,27 @@ async function loadMyDesigns() {
         grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Při načítáni nastala chyba :(</div>";
     }
 
+}
+
+async function loadMyDesign(design, zoomContent, loading) {
+    try {
+        const [frontImage, backImage] = await Promise.all([
+            loadImage(design.front),
+            loadImage(design.back)
+        ])
+
+        const canvas = await drawCanvas(
+            design.color,
+            frontImage,
+            backImage
+        )
+
+        loading.remove()
+        zoomContent.appendChild(canvas)
+    } catch (e) {
+        console.warn(e)
+        loading.textContent = "Při načítání nastala chyba :("
+    }
 }
 
 let lastSite = "W-Welcome";
@@ -599,7 +611,7 @@ async function loadDesigns() {
 
     const grid = document.getElementById("DesignsGrid");
 
-    grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Probíhá načítání...</div>";
+    grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Načítá se...</div>";
 
     try {
         const response = await fetch(
@@ -753,24 +765,17 @@ async function loadDesigns() {
             const zoomContent = document.createElement("div");
             zoomContent.className = "zoom-content";
 
-            const [frontImage, backImage] = await Promise.all([
-                loadImage(design.front),
-                loadImage(design.back)
-            ]);
-
-            const canvas = await drawCanvas(
-                design.color,
-                frontImage,
-                backImage
-            );
-
-            zoomContent.appendChild(canvas);
+            const loading = document.createElement("div");
+            loading.className = "design-title";
+            loading.textContent = "Načítá se...";
+            zoomContent.appendChild(loading);
             zoomStage.appendChild(zoomContent);
 
             card.appendChild(header);
             card.appendChild(zoomStage);
             card.append(footer);
             grid.appendChild(card);
+            loadDesign(design, zoomContent, loading);
         }
 
         DesignPage = data.page;
@@ -789,6 +794,27 @@ async function loadDesigns() {
     } catch (e) {
         console.warn(e);
         grid.innerHTML = "<div class=\"design-title\" style=\"width:100%\">Při načítáni nastala chyba :(</div>";
+    }
+}
+
+async function loadDesign(design, zoomContent, loading) {
+    try {
+        const [frontImage, backImage] = await Promise.all([
+            loadImage(design.front),
+            loadImage(design.back)
+        ]);
+
+        const canvas = await drawCanvas(
+            design.color,
+            frontImage,
+            backImage
+        );
+
+        loading.remove();
+        zoomContent.appendChild(canvas);
+    } catch (e) {
+        console.warn(e);
+        loading.textContent = "Při načítání nastala chyba :(";
     }
 }
 
