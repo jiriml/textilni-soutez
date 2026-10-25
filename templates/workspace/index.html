@@ -186,18 +186,28 @@
         return cut;
     }
 
-    async function drawCanvas(color, front, back) {
+    async function drawCanvas(color, front, back, renderScale = 1) {
+        const canvasWidth = TshirtDimensions[0] * 2;
+        const canvasHeight = TshirtDimensions[1];
         const drawCanvas = document.createElement("canvas");
-        drawCanvas.width = TshirtDimensions[0] * 2; // dvě trička vedle sebe
-        drawCanvas.height = TshirtDimensions[1];
+        drawCanvas.width = Math.round(canvasWidth * renderScale);
+        drawCanvas.height = Math.round(canvasHeight * renderScale);
         const ctx = drawCanvas.getContext("2d");
+        ctx.scale(renderScale, renderScale);
 
-
-        //const baseImg = await loadImage("{{ url_for('static', filename='images/canvasTshirt.png') }}");
-        const baseFront = await loadImage("{{ url_for('static', filename='images/canvasFront.png') }}");
-        const baseBack = await loadImage("{{ url_for('static', filename='images/canvasBack.png') }}");
+        const usePreviewAssets = renderScale < 1;
+        const baseFront = await loadImage(
+            usePreviewAssets
+                ? "{{ url_for('static', filename='images/canvasFrontPreview.png') }}"
+                : "{{ url_for('static', filename='images/canvasFront.png') }}"
+        );
+        const baseBack = await loadImage(
+            usePreviewAssets
+                ? "{{ url_for('static', filename='images/canvasBackPreview.png') }}"
+                : "{{ url_for('static', filename='images/canvasBack.png') }}"
+        );
         // === HLAVNÍ CANVAS ===
-        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
         // === TEMPLATE CANVAS (data layer) ===
         const template = document.createElement("canvas");
@@ -205,10 +215,11 @@
         template.height = drawCanvas.height;
 
         const tctx = template.getContext("2d");
+        tctx.scale(renderScale, renderScale);
 
         // 1️⃣ barva (pozadí)
         tctx.fillStyle = color;
-        tctx.fillRect(0, 0, template.width, template.height);
+        tctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
         // 2️⃣ FRONT image
         if (front) {
@@ -235,8 +246,8 @@
         // === RENDER LAYER ===
 
         // 4️⃣ nakresli obě trička (maska + shading základ)
-        ctx.drawImage(baseFront, 0, 0);
-        ctx.drawImage(baseBack, TshirtDimensions[0], 0);
+        ctx.drawImage(baseFront, 0, 0, TshirtDimensions[0], TshirtDimensions[1]);
+        ctx.drawImage(baseBack, TshirtDimensions[0], 0, TshirtDimensions[0], TshirtDimensions[1]);
 
         // 5️⃣ aplikuj template jen tam kde je tričko
         ctx.globalCompositeOperation = "source-in";
@@ -244,8 +255,8 @@
 
         // 6️⃣ shading (detaily trička)
         ctx.globalCompositeOperation = "multiply";
-        ctx.drawImage(baseFront, 0, 0);
-        ctx.drawImage(baseBack, TshirtDimensions[0], 0);
+        ctx.drawImage(baseFront, 0, 0, TshirtDimensions[0], TshirtDimensions[1]);
+        ctx.drawImage(baseBack, TshirtDimensions[0], 0, TshirtDimensions[0], TshirtDimensions[1]);
 
         // reset
         ctx.globalCompositeOperation = "source-over";
@@ -565,25 +576,46 @@ async function loadMyDesigns() {
 
 }
 
-async function loadMyDesign(design, zoomContent, loading) {
-    try {
-        const [frontImage, backImage] = await Promise.all([
-            loadImage(design.front),
-            loadImage(design.back)
-        ])
+const DESIGN_PREVIEW_SCALE = /iPhone|iPod|Android.*Mobile|Windows Phone/i.test(navigator.userAgent)
+    ? 0.15
+    : 1;
+let designPreviewQueue = Promise.resolve();
 
-        const canvas = await drawCanvas(
-            design.color,
-            frontImage,
-            backImage
-        )
+function renderDesignPreview(design, zoomContent, loading) {
+    const render = async () => {
+        if (!loading.isConnected) return;
 
-        loading.remove()
-        zoomContent.appendChild(canvas)
-    } catch (e) {
-        console.warn(e)
-        loading.textContent = "Při načítání nastala chyba :("
+        try {
+            const [frontImage, backImage] = await Promise.all([
+                loadImage(design.front),
+                loadImage(design.back)
+            ])
+
+            const canvas = await drawCanvas(
+                design.color,
+                frontImage,
+                backImage,
+                DESIGN_PREVIEW_SCALE
+            )
+
+            loading.remove()
+            zoomContent.appendChild(canvas)
+        } catch (e) {
+            console.warn(e)
+            loading.textContent = "Při načítání nastala chyba :("
+        }
+    };
+
+    if (DESIGN_PREVIEW_SCALE < 1) {
+        designPreviewQueue = designPreviewQueue.then(render, render);
+        return designPreviewQueue;
     }
+
+    return render();
+}
+
+async function loadMyDesign(design, zoomContent, loading) {
+    await renderDesignPreview(design, zoomContent, loading);
 }
 
 let lastSite = "W-Welcome";
@@ -798,24 +830,7 @@ async function loadDesigns() {
 }
 
 async function loadDesign(design, zoomContent, loading) {
-    try {
-        const [frontImage, backImage] = await Promise.all([
-            loadImage(design.front),
-            loadImage(design.back)
-        ]);
-
-        const canvas = await drawCanvas(
-            design.color,
-            frontImage,
-            backImage
-        );
-
-        loading.remove();
-        zoomContent.appendChild(canvas);
-    } catch (e) {
-        console.warn(e);
-        loading.textContent = "Při načítání nastala chyba :(";
-    }
+    await renderDesignPreview(design, zoomContent, loading);
 }
 
 </script>
